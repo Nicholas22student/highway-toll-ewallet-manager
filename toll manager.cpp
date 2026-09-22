@@ -1,136 +1,156 @@
 #include <iostream>
-#include <string>
 #include <iomanip>
-#include <cmath>
+#include <string>
 
 using namespace std;
 
-// Structure to track user account and eWallet details
-struct WalletAccount {
-    string ownerName;
-    string vehiclePlate;
-    double eWalletBalance;
-};
-
-// Function prototypes
+// Function declarations
 void displayHeader();
-void processTollJourney(WalletAccount &acc);
-void reloadWallet(WalletAccount &acc);
+void displayMainMenu();
+void checkBalance(double balance);
 
 int main() {
-    WalletAccount driver;
-    int choice;
+    double walletBalance = 0.0;
+    int routeChoice = 0;
+    int vehicleClass = 0;
+    double tollFare = 0.0;
+    char subChoice;
+    bool continueProgram = true;
 
-    cout << "=== HIGHWAY TOLL & eWALLET INITIALIZATION ===" << endl;
-    cout << "Enter Driver Name: ";
-    getline(cin, driver.ownerName);
-    cout << "Enter Vehicle Plate Number (e.g., ABC1234): ";
-    cin >> driver.vehiclePlate;
-    cout << "Initial eWallet Balance (RM): ";
-    cin >> driver.eWalletBalance;
+    displayHeader();
+
+    // Student step: Set up initial wallet balance with validation
+    cout << "Welcome! Please initialize your starting eWallet balance (RM): ";
+    while (!(cin >> walletBalance) || walletBalance < 0) {
+        cout << "Invalid input. Please enter a valid positive balance (RM): ";
+        cin.clear();
+        cin.ignore(1000, '\n');
+    }
 
     do {
-        displayHeader();
-        cout << "\n[MAIN DASHBOARD - Welcome, " << driver.ownerName << "]" << endl;
-        cout << "Vehicle Plate : " << driver.vehiclePlate << endl;
-        cout << "Current eWallet Balance : RM " << fixed << setprecision(2) << driver.eWalletBalance << endl;
-        cout << "--------------------------------------------------" << endl;
-        cout << "1. Simulate RFID Toll Journey & Fare Deduction" << endl;
-        cout << "2. Reload eWallet Balance" << endl;
-        cout << "3. Exit System" << endl;
-        cout << "Select an option (1-3): ";
-        cin >> choice;
+        displayMainMenu();
+        cout << "\nEnter your option (1-4): ";
+        cin >> routeChoice;
 
-        // Input error handling for non-integer choices
-        if (cin.fail()) {
-            cin.clear();
-            cin.ignore(10000, '\n');
-            cout << "\n[Error] Invalid input type. Please enter a numerical option (1-3).\n";
-            continue;
-        }
+        // Process route selection
+        switch (routeChoice) {
+            case 1: // North-South Expressway (PLUS) - Long Distance
+                cout << "\n--- Route: North-South Expressway (PLUS) ---" << endl;
+                cout << "1. Class 1: Private Passenger Cars" << endl;
+                cout << "2. Class 2: Small Commercial Vans/Lorries" << endl;
+                cout << "3. Class 3: Heavy Duty Multi-Axle Trucks" << endl;
+                cout << "Select vehicle class (1-3): ";
+                cin >> vehicleClass;
+                
+                if (vehicleClass == 1) tollFare = 12.87;      // Simulating KL to Ayer Keroh rate
+                else if (vehicleClass == 2) tollFare = 24.50;
+                else if (vehicleClass == 3) tollFare = 38.00;
+                else {
+                    cout << "❌ Invalid vehicle class selection." << endl;
+                    continue;
+                }
+                break;
 
-        switch (choice) {
-            case 1:
-                processTollJourney(driver);
+            case 2: // Shah Alam Expressway (KESAS) - Open Toll Flat Rate
+                cout << "\n--- Route: Shah Alam Expressway (KESAS) ---" << endl;
+                cout << "1. Class 1: Private Passenger Cars" << endl;
+                cout << "2. Class 2: Small Commercial Vans/Lorries" << endl;
+                cout << "Select vehicle class (1-2): ";
+                cin >> vehicleClass;
+
+                if (vehicleClass == 1) tollFare = 2.00;
+                else if (vehicleClass == 2) tollFare = 4.00;
+                else {
+                    cout << "❌ Invalid vehicle class selection." << endl;
+                    continue;
+                }
                 break;
-            case 2:
-                reloadWallet(driver);
+
+            case 3: // View current wallet status
+                checkBalance(walletBalance);
+                tollFare = 0.0; // Reset so transaction doesn't process
                 break;
-            case 3:
-                cout << "\nThank you for using the Smart Highway Toll & eWallet Manager. Drive safely!\n";
+
+            case 4: // Exit System
+                cout << "\nThank you for using the Highway Toll & eWallet Manager. Drive safely!" << endl;
+                continueProgram = false;
                 break;
+
             default:
-                cout << "\n[Error] Invalid option. Please select between 1 and 3.\n";
+                cout << "❌ Invalid choice! Please select a valid menu option." << endl;
+                continue;
         }
 
-    } while (choice != 3);
+        // Process transaction if a route was selected
+        if (continueProgram && routeChoice != 3 && routeChoice != 4) {
+            cout << fixed << setprecision(2);
+            cout << "\n----------------------------------------" << endl;
+            cout << "Processing Plaza Transaction..." << endl;
+            cout << "Toll Fare Charges : RM " << tollFare << endl;
+            cout << "Current Balance   : RM " << walletBalance << endl;
+
+            if (walletBalance >= tollFare) {
+                walletBalance -= tollFare;
+                cout << "✅ Transaction Successful! Gate Opened." << endl;
+                cout << "Updated eWallet Balance: RM " << walletBalance << endl;
+            } else {
+                cout << "❌ TRANSACTION DENIED: Insufficient eWallet Funds!" << endl;
+                cout << "Missing Amount : RM " << (tollFare - walletBalance) << endl;
+                cout << "Would you like to top up now? (Y/N): ";
+                cin >> subChoice;
+
+                if (subChoice == 'Y' || subChoice == 'y') {
+                    double topUpAmount;
+                    cout << "Enter top up amount (RM): ";
+                    cin >> topUpAmount;
+                    if (topUpAmount > 0) {
+                        walletBalance += topUpAmount;
+                        cout << "✅ Top Up Successful! Current Balance: RM " << walletBalance << endl;
+                    } else {
+                        cout << "Invalid amount. Transaction aborted." << endl;
+                    }
+                }
+            }
+            cout << "----------------------------------------" << endl;
+        }
+
+        if (routeChoice != 4) {
+            cout << "\nReturn to Main Menu? (y/n): ";
+            cin >> subChoice;
+            if (subChoice == 'n' || subChoice == 'N') {
+                cout << "\nThank you for using the system. Have a safe journey!" << endl;
+                continueProgram = false;
+            }
+        }
+
+    } while (continueProgram);
 
     return 0;
 }
 
+// Visual layout helper for high score on presentation/UX
 void displayHeader() {
-    cout << "\n==================================================" << endl;
-    cout << "      SMART RFID TOLL & eWALLET GATEWAY SYSTEM    " << endl;
-    cout << "==================================================" << endl;
+    cout << "=========================================================" << endl;
+    cout << "       HIGHWAY TOLL FARE & EWALLET BALANCE MANAGER       " << endl;
+    cout << "   Fundamentals of Digital Competence Course Assignment   " << endl;
+    cout << "=========================================================" << endl;
 }
 
-void processTollJourney(WalletAccount &acc) {
-    int entryZone, exitZone;
-    double fareRate = 0.0;
-
-    cout << "\n--- SELECT HIGHWAY TOLL PLAZAS ---" << endl;
-    cout << "1. Plaza North (Jitra)" << endl;
-    cout << "2. Plaza Central (Sungai Buloh)" << endl;
-    cout << "3. Plaza South (Skudai)" << endl;
-    cout << "Enter Entry Plaza (1-3): ";
-    cin >> entryZone;
-    cout << "Enter Exit Plaza (1-3): ";
-    cin >> exitZone;
-
-    // Validate plaza inputs
-    if (entryZone < 1 || entryZone > 3 || exitZone < 1 || exitZone > 3) {
-        cout << "\n[Error] Invalid toll plaza selected. Journey aborted.\n";
-        return;
-    }
-
-    if (entryZone == exitZone) {
-        cout << "\n[Notice] Entry and Exit plazas are identical. Flat minimum fee applied: RM 2.00\n";
-        fareRate = 2.00;
-    } else {
-        int distanceUnit = abs(exitZone - entryZone);
-        fareRate = 5.80 * distanceUnit; // Distance-based calculation mock
-    }
-
-    cout << "Calculated Toll Fare: RM " << fixed << setprecision(2) << fareRate << endl;
-
-    // Check balance adequacy
-    if (acc.eWalletBalance < fareRate) {
-        cout << "[TRANSACTION DECLINED] Insufficient eWallet balance!" << endl;
-        cout << "RFID barrier will not open. Please reload your account or back up to cash/SmartTAG lane.\n";
-    } else {
-        acc.eWalletBalance -= fareRate;
-        cout << "[SUCCESS] RFID scanner verified. Toll fee deducted successfully." << endl;
-        cout << "Updated eWallet Balance: RM " << fixed << setprecision(2) << acc.eWalletBalance << endl;
-        
-        // Low balance notification threshold
-        if (acc.eWalletBalance < 15.00) {
-            cout << "[WARNING] Your eWallet balance is below RM 15.00. Auto-reload recommended!\n";
-        }
-    }
-    cout << "==================================================" << endl;
+void displayMainMenu() {
+    cout << "\n**** SYSTEM MAIN MENU ****" << endl;
+    cout << "1. Pass Through North-South Expressway (PLUS Plaza)" << endl;
+    cout << "2. Pass Through Shah Alam Expressway (KESAS Plaza)" << endl;
+    cout << "3. Check eWallet Balance Status" << endl;
+    cout << "4. Exit System Application" << endl;
 }
 
-void reloadWallet(WalletAccount &acc) {
-    double reloadAmount;
-    cout << "\n--- eWALLET INSTANT RELOAD KIOSK ---" << endl;
-    cout << "Enter amount to reload (RM): ";
-    cin >> reloadAmount;
-
-    if (reloadAmount <= 0) {
-        cout << "[Error] Reload amount must be greater than zero.\n";
-    } else {
-        acc.eWalletBalance += reloadAmount;
-        cout << "[SUCCESS] eWallet successfully reloaded. New Balance: RM " << fixed << setprecision(2) << acc.eWalletBalance << endl;
+void checkBalance(double balance) {
+    cout << fixed << setprecision(2);
+    cout << "\n=== eWALLET ACCOUNT SUMMARY ===" << endl;
+    cout << "Active Status: CONNECTED" << endl;
+    cout << "Current Balance: RM " << balance << endl;
+    if (balance < 10.00) {
+        cout << "⚠️ Warning: Low Balance! Please top up your wallet soon." << endl;
     }
-    cout << "==================================================\n";
+    cout << "===============================" << endl;
 }
